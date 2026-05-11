@@ -1,0 +1,137 @@
+# DF-PMS-MEWS-Adapter Configuration [CRUX-MK]
+#
+# 12. Foundation-DF (Welle-36): MEWS PMS-Mosaic-Adapter.
+# HeyLou-Mosaic-Layer fuer Property Management System Mews (Industry-Leader).
+# EIGENSTAENDIG: kein Cross-DF-Coupling notwendig (Standalone-Connector).
+
+df_id: df-pms-mews-adapter
+df_name: HeyLou-Mosaic-Adapter-MEWS
+version: 0.1.0-SKELETON
+domain: travel-hospitality
+welle_introduced: welle-36
+type: foundation-df
+crux-mk: true
+
+adapter_target: mews-pms
+
+# === LLM Providers (Adapter haben KEIN LLM, sie sind Connector) ===
+llm_providers: []
+
+# === K11-K16 DF-Akzeptanz-Kriterien (rules/df-akzeptanz-kriterien.md) ===
+k11_cascade_isolation: hard
+failure_blast_radius: 1
+dependency_dlq_strategy: per-operation-jsonl
+
+k12_distillation_resistance:
+  output_feeds_into_training: false
+  provenance_required_in_output: true
+  non_llm_validation_layer: true
+
+k13_pre_action_verification:
+  enabled: true
+  external_anchor_type: vendor_api    # MEWS-API ist echter externer Anker
+  external_anchor_validation_frequency: daily
+  pre_action_domain_check: true
+  pre_action_backup_check: true
+  pre_action_blast_radius_check: true
+  k0_q0_filter_enabled: true
+
+k14_human_override:
+  override_complexity: single_command
+  martin_review_cadence: weekly
+  bus_factor_handover_drilled: false
+  hardened_promotion_requires_phronesis_ticket: true
+
+k15_entropy_budget:
+  entropy_added_loc_estimate: 600
+  entropy_added_concepts:
+    - MEWSConnector
+    - MEWSOAuthManager
+    - MEWSAdapterOrchestrator
+    - MEWSBookingRequest
+    - MEWSInventoryResponse
+  entropy_justified_by_rho: 25000      # EUR/J Schaetzung PMS-Mews-Integration
+  entropy_subtractive_potential: 0
+
+k16_concurrent_spawn_protection: both
+lock_dir: /tmp/df-pms-mews-adapter.lock
+lock_stale_age_h: 6
+engine_pgrep_check: true
+lock_release_on: EXIT_INT_TERM
+
+# === LC1-LC5 Lose-Coupling (rules/df-lose-coupling.md) ===
+lose_coupling:
+  LC1_graceful_degradation:
+    degradation_modes:
+      - full                     # Real-API + Auth + Tenant-Context
+      - degraded_no_real_api     # DF_PMS_MEWS_REAL_ENABLED=false -> Mock
+      - standalone_mock          # Komplettes Mock-Fallback (Internet-Outage)
+    degradation_test_required: true
+
+  LC2_direct_mode:
+    direct_mode_available: true
+    direct_mode_capability: 0.5  # ohne Real-API: 50% Funktion (Mock-Daten)
+    direct_mode_trigger: "DF_PMS_MEWS_REAL_ENABLED!=true OR mews-api-unreachable"
+
+  LC3_circuit_breaker:
+    circuit_breaker_timeout_s: 30
+    circuit_breaker_open_threshold: 3
+    circuit_breaker_half_open_test_interval_s: 300
+
+  LC4_failure_isolation:
+    state_externalization: true
+    idempotent_operations: true
+    dependency_dlq_separate: true
+
+  LC5_health_check:
+    health_check_dependencies: []   # standalone
+    health_check_degraded_score: 0.5
+    health_check_endpoint_or_file: branch-hub/state/df-pms-mews-adapter-health.json
+
+# === Audit Trail ===
+audit_dir: audit/
+audit_logs:
+  - mews-operations.jsonl
+  - mews-auth.jsonl
+loop_reports_dir: runs/loop-reports/
+
+# === ENV-Var-Gated Real-Integration ===
+env_vars:
+  DF_PMS_MEWS_REAL_ENABLED: false
+  MEWS_CLIENT_TOKEN: ""
+  MEWS_ACCESS_TOKEN: ""
+  DF_PMS_MEWS_PHRONESIS_TICKET: ""
+  DF_PMS_MEWS_HMAC_SECRET: ""
+  DF_PMS_MEWS_TENANT_ID: hildesheim
+  DF_PMS_MEWS_TIMEOUT_S: 30
+
+# === Sandbox-Daten ===
+sandbox_hotels:
+  - hotel_id: hildesheim
+    name: HeyLou Hildesheim
+    mews_property_id: mock-hildesheim-001
+  - hotel_id: cape-coral
+    name: HeyLou Cape Coral
+    mews_property_id: mock-cape-coral-001
+  - hotel_id: munich
+    name: HeyLou Munich
+    mews_property_id: mock-munich-001
+
+# === Promotion-Pfad ===
+promotion_path:
+  current_tier: SKELETON
+  target_tier: PRE-PRODUCTION-CONDITIONAL
+  pflicht_aktionen_welle_37:
+    - Cross-LLM-Wargame mit Codex+Gemini+Copilot
+    - Failure-Injection-Test-Pack >=7 Tests
+    - Real-MEWS-Sandbox-API Pilot (Mews-Demo-Property)
+    - Multi-Tenant-Isolation-Tests
+    - Hildesheim-Pilot 30 Tage Real-MEWS-Operation
+
+# === Cascade-Hebel-Invarianten ===
+cascade_invariants:
+  orthogonal: "Adapter operiert nur auf MEWS-API-Endpoints (PMS-Scope)"
+  kanonisch: "frozen dataclass AdapterResponse mit source/provenance/hash"
+  monoton: "Operations: connect -> query -> book -> cancel (kein Re-Expansion)"
+  persistent: "JSONL Audit-Log per operation + LoopReport-JSON"
+  bounded: "per-operation timeout 30s, max 30 Tool-Uses pro Run"
