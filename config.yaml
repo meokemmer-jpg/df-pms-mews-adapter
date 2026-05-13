@@ -14,6 +14,23 @@ crux-mk: true
 
 adapter_target: mews-pms
 
+# === Default-Action (Welle-51 Batch-5 Migration, per Schicht-2 v1.2) ===
+# Migration-Welle: Welle-51 Batch-5
+default_action:
+  description: "MEWS-PMS-Connector fuer HeyLou-Hotels: Bookings/Inventory/Rate-Management via MEWS-API mit OAuth-Refresh + Tenant-Context-Isolation pro Hotel"
+  rho_per_run_eur: 110
+  rho_validation_source: unvalidated
+  block_gates:
+    - gate_id: K13_PAV
+      block_reason: "Pre-Action-Check failed (MEWS-API-Health daily-anchor missing ODER OAuth-Token expired ODER PHRONESIS_TICKET missing fuer Real-Mode)"
+      false_block_cost_eur: 50
+      legitimate_block_condition: "MEWS-API unreachable >300s ODER Token-Refresh-Failure ODER DF_PMS_MEWS_REAL_ENABLED=true ohne PHRONESIS_TICKET"
+    - gate_id: K12
+      block_reason: "Provenance fehlt in Booking/Inventory-Response ODER Non-LLM-Validation-Layer failed (Schema-Mismatch)"
+      false_block_cost_eur: 40
+      legitimate_block_condition: "MEWS-Response ohne hotel_id/booking_id-Provenance ODER Schema-Drift vs MEWS-API-v40"
+  graceful_degradation_path: "degraded_no_real_api (DF_PMS_MEWS_REAL_ENABLED=false → Mock-Daten) ODER standalone_mock (Internet-Outage, voller Mock-Fallback)"
+
 # === LLM Providers (Adapter haben KEIN LLM, sie sind Connector) ===
 llm_providers: []
 
