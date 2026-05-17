@@ -1,0 +1,39 @@
+{
+  "loop_id": "96fbcdb8",
+  "df_id": "df-pms-mews-adapter",
+  "started_iso": "2026-05-16T15:49:36.681143+00:00",
+  "finished_iso": "2026-05-16T15:49:36.741120+00:00",
+  "sandbox_mode": true,
+  "final_status": "complete",
+  "phases_passed": [
+    "auth",
+    "connect",
+    "health_check",
+    "sample_query",
+    "audit_persist"
+  ],
+  "phases_failed": [],
+  "artifacts": {
+    "capabilities": {
+      "adapter_name": "mews-pms",
+      "version": "0.1.0-SKELETON",
+      "sandbox_mode": true,
+      "connected": true,
+      "supported_operations": [
+        "connect",
+        "query_inventory",
+        "book_room",
+        "cancel_booking"
+      ],
+      "feature_flags": {
+        "real_api": false,
+        "k17_pav": true,
+        "hmac_audit": true,
+        "circuit_breaker": true
+      },
+      "health_score": 1.0
+    },
+    "sample_inventory_count": 3
+  },
+  "error": null
+}
