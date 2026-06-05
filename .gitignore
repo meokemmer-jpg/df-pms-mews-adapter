@@ -17,3 +17,12 @@ dist/
 .coverage
 htmlcov/
 STOP.flag
+*.env
+.env
+*.db
+*.sqlite
+*.sqlite3
+*.key
+*.pem
+secrets.json
+credentials.json
