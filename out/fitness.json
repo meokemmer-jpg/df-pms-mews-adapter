@@ -1,0 +1,8 @@
+{
+  "df": "df-pms-mews-adapter",
+  "ts": "2026-06-05T15:52:05.542536+00:00",
+  "ok": true,
+  "bytes": 2890,
+  "model": "qwen2.5:14b-instruct",
+  "duration_s": 57.7
+}
