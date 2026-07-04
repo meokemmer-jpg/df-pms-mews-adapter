@@ -1,9 +1,9 @@
 {
   "df": "df-pms-mews-adapter",
-  "ts": "2026-07-03T02:52:00.075761+00:00",
+  "ts": "2026-07-04T01:47:57.629644+00:00",
   "maturity": "TESTED",
   "maturity_level": 4,
   "evidence_grade": 4,
-  "wargame_verdict": "CONDITIONAL",
+  "wargame_verdict": null,
   "crux": "[CRUX-MK]"
 }
